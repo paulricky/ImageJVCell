@@ -1,13 +1,25 @@
 import argparse
-import sys
-import traceback
-
-import COPASI
-from data import CopasiOptimizationMethod, OptProblem, CopasiOptimizationMethodOptimizationMethodType, CopasiOptimizationParameterParamType
-import tempfile
+import json
 import os
 import os.path
-import json
+import sys
+import tempfile
+import traceback
+
+from COPASI import CFitTask, COptMethod, CExperimentObjectMap
+from COPASI import CMetab, MetabVector, ModelValueVectorN, CModelValue, CompartmentVectorNS, CCompartment
+from COPASI import CModel, CTaskEnum, CExperimentSet, CExperiment, COptProblem, CDataModel, CRootContainer, \
+    CMathContainer
+from COPASI import CCopasiParameterGroup, CCommonName, CCopasiTask, CCopasiMessage
+
+from COPASI import CFitItem
+from COPASI import CCopasiParameter
+from data import CopasiOptimizationParameterDataType, CopasiOptimizationParameter
+from typing import List
+from COPASI import CExperiment, CDataObject
+
+from data import OptProblem, CopasiOptimizationMethodOptimizationMethodType, CopasiOptimizationParameterParamType, Vcellopt
+
 
 def main():
     #sys.setrecursionlimit(100000)
@@ -45,11 +57,10 @@ def main():
         #-----------------------------------------------------------------------------
         # add CDataModel
         #
-        assert(COPASI.CCopasiRootContainer.getRoot() != None)
+        assert(CRootContainer.getRoot() != None)
         # create a datamodel
-        dataModel = COPASI.CCopasiRootContainer.addDatamodel();
-        assert(isinstance(dataModel,COPASI.CCopasiDataModel))
-        assert(COPASI.CCopasiRootContainer.getDatamodelList().size() == 1)
+        dataModel: CDataModel = CRootContainer.addDatamodel();
+        assert(CRootContainer.getDatamodelList().size() == 1)
 
         try:
             #sbmlFile = "C:\\COPASI-4.19.140-Source\\copasi\\bindings\\python\\examples\\exampleDeni.xml"
@@ -63,22 +74,19 @@ def main():
             sys.stderr.flush()
             return -1
 
-        model = dataModel.getModel()
-        assert(isinstance(model,COPASI.CModel))
+        model: CModel = dataModel.getModel()
         model.compileIfNecessary()
 
         printModel(model)
 
-        mathContainer = model.getMathContainer()
-        assert(isinstance(mathContainer,COPASI.CMathContainer))
+        mathContainer: CMathContainer = model.getMathContainer()
         # dataModel.saveModel("optModel.cps", True)
 
 
         #---------------------------------------------------------------------------
         # add CFitTask
         #---------------------------------------------------------------------------
-        fitTask = dataModel.addTask(COPASI.CTaskEnum.parameterFitting)
-        assert(isinstance(fitTask, COPASI.CFitTask))
+        fitTask: CFitTask = dataModel.addTask(CTaskEnum.parameterFitting)
 
         '''
         enum OptimizationMethodType {
@@ -98,30 +106,29 @@ def main():
         }
         '''
         methodTypeDict = dict()
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.EvolutionaryProgram] = COPASI.CTaskEnum.Method_EvolutionaryProgram
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.SRES] = COPASI.CTaskEnum.Method_SRES
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.GeneticAlgorithm] = COPASI.CTaskEnum.Method_GeneticAlgorithm
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.GeneticAlgorithmSR] = COPASI.CTaskEnum.Method_GeneticAlgorithmSR
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.HookeJeeves] = COPASI.CTaskEnum.Method_HookeJeeves
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.LevenbergMarquardt] = COPASI.CTaskEnum.Method_LevenbergMarquardt
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.NelderMead] = COPASI.CTaskEnum.Method_NelderMead
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.ParticleSwarm] = COPASI.CTaskEnum.Method_ParticleSwarm
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.RandomSearch] = COPASI.CTaskEnum.Method_RandomSearch
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.SimulatedAnnealing] = COPASI.CTaskEnum.Method_SimulatedAnnealing
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.SteepestDescent] = COPASI.CTaskEnum.Method_SteepestDescent
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.Praxis] = COPASI.CTaskEnum.Method_Praxis
-        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.TruncatedNewton] = COPASI.CTaskEnum.Method_TruncatedNewton
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.EvolutionaryProgram] = CTaskEnum.Method_EvolutionaryProgram
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.SRES] = CTaskEnum.Method_SRES
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.GeneticAlgorithm] = CTaskEnum.Method_GeneticAlgorithm
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.GeneticAlgorithmSR] = CTaskEnum.Method_GeneticAlgorithmSR
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.HookeJeeves] = CTaskEnum.Method_HookeJeeves
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.LevenbergMarquardt] = CTaskEnum.Method_LevenbergMarquardt
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.NelderMead] = CTaskEnum.Method_NelderMead
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.ParticleSwarm] = CTaskEnum.Method_ParticleSwarm
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.RandomSearch] = CTaskEnum.Method_RandomSearch
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.SimulatedAnnealing] = CTaskEnum.Method_SimulatedAnnealing
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.SteepestDescent] = CTaskEnum.Method_SteepestDescent
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.Praxis] = CTaskEnum.Method_Praxis
+        methodTypeDict[CopasiOptimizationMethodOptimizationMethodType.TruncatedNewton] = CTaskEnum.Method_TruncatedNewton
 
         #
         # set CFitMethod
         #
         copasiFitMethodType = methodTypeDict[vcellOptProblem.optimizationMethod.optimizationMethodType]
         if (copasiFitMethodType not in fitTask.getValidMethods()):
-            print "fit method not allowed"
+            print("fit method not allowed")
             return 1
         fitTask.setMethodType(copasiFitMethodType)
-        fitMethod = fitTask.getMethod()
-        assert(isinstance(fitMethod,COPASI.COptMethod))
+        fitMethod: COptMethod = fitTask.getMethod()
 
         '''
         enum OptimizationParameterType {
@@ -176,38 +183,33 @@ def main():
             <Parameter name="Seed" type="unsignedInteger" value="44"/>
         </Method>
         '''
-        vcellOptParamList = vcellOptProblem.optimizationMethod.optimizationParameterList
+        vcellOptParamList: List[CopasiOptimizationParameter] = vcellOptProblem.optimizationMethod.optimizationParameterList
         assert(isinstance(vcellOptParamList, list))
         for vcellOptParam in vcellOptParamList:
-            assert(isinstance(vcellOptParam,VCELLOPT.CopasiOptimizationParameter))
-            print methodParamDict[vcellOptParam.paramType]
+            print(methodParamDict[vcellOptParam.paramType])
             fitMethod.removeParameter(methodParamDict[vcellOptParam.paramType])
-            if (vcellOptParam.dataType == VCELLOPT.OptimizationParameterDataType.INT):
-                fitMethod.addParameter(methodParamDict[vcellOptParam.paramType], COPASI.CCopasiParameter.INT)
+            if (vcellOptParam.dataType == CopasiOptimizationParameterDataType.INT):
+                fitMethod.addParameter(methodParamDict[vcellOptParam.paramType], CCopasiParameter.INT)
                 fitParameter = fitMethod.getParameter(methodParamDict[vcellOptParam.paramType])
-                assert (isinstance(fitParameter, COPASI.CCopasiParameter))
+                assert (isinstance(fitParameter, CCopasiParameter))
                 fitParameter.setIntValue(int(vcellOptParam.value))
             else:
-                fitMethod.addParameter(methodParamDict[vcellOptParam.paramType], COPASI.CCopasiParameter.DOUBLE)
+                fitMethod.addParameter(methodParamDict[vcellOptParam.paramType], CCopasiParameter.DOUBLE)
                 fitParameter = fitMethod.getParameter(methodParamDict[vcellOptParam.paramType])
-                assert (isinstance(fitParameter, COPASI.CCopasiParameter))
+                assert (isinstance(fitParameter, CCopasiParameter))
                 fitParameter.setDblValue(vcellOptParam.value)
 
         #
         # get FitProblem
         #
-        fitProblem = fitTask.getProblem()
-        assert(isinstance(fitProblem, COPASI.COptProblem))  # works for all COPASI builds >= 140
-        #assert(isinstance(fitProblem, COPASI.CFitProblem)) # not CFitProblem in COPASI build 140
+        fitProblem: COptProblem = fitTask.getProblem()
         #fitProblem.setRandomizeStartValues(True)
 
-        experimentSet = fitProblem.getParameter("Experiment Set")
-        assert(isinstance(experimentSet,COPASI.CExperimentSet))
+        experimentSet: CExperimentSet = fitProblem.getParameter("Experiment Set")
         assert(experimentSet.getExperimentCount() == 0)
 
         # first experiment
-        experiment = COPASI.CExperiment(dataModel)
-        assert(isinstance(experiment,COPASI.CExperiment))
+        experiment: CExperiment = CExperiment(dataModel)
         experiment.setIsRowOriented(True)
 
         # Use the TemporaryFile context manager for easy clean-up
@@ -226,7 +228,7 @@ def main():
         experiment.setLastRow(num_lines)
         experiment.setHeaderRow(1)
         experiment.setSeparator(",")
-        experiment.setExperimentType(COPASI.CTaskEnum.timeCourse)
+        experiment.setExperimentType(CTaskEnum.timeCourse)
         experiment.setNormalizeWeightsPerExperiment(True)
         vcellReferenceVariableList = vcellOptProblem.referenceVariableList
         assert(isinstance(vcellReferenceVariableList, list))
@@ -234,22 +236,20 @@ def main():
         experiment.setNumColumns(num_ref_variables) # one independent (time), all the other dependent
 
         # experiment object map
-        objectMap = experiment.getObjectMap()
-        assert (isinstance(objectMap, COPASI.CExperimentObjectMap))
-        result = objectMap.setNumCols(num_ref_variables)
+        objectMap: CExperimentObjectMap = experiment.getObjectMap()
+        result: bool = objectMap.setNumCols(num_ref_variables)
         assert result == True
 
         # map time column to model time
         '''
         <variable type="independent" name="t"/>
         '''
-        result = objectMap.setRole(0, COPASI.CExperiment.time)
+        result = objectMap.setRole(0, CExperiment.time)
         assert (result==True)
-        assert objectMap.getRole(0) == COPASI.CExperiment.time
-        timeReference = model.getValueReference()
+        assert objectMap.getRole(0) == CExperiment.time
+        timeReference: CDataObject = model.getValueReference()
         #timeReference = model.getObject(COPASI.CCopasiObjectName("Reference=Time"))
-        assert(timeReference!=None)
-        assert(isinstance(timeReference,COPASI.CCopasiObject))
+        assert(timeReference is not None)
         objectMap.setObjectCN(0,timeReference.getCN().getString())
         # getObjectCN returns a string whereas getCN returns a CCopasiObjectName
         assert(objectMap.getObjectCN(0)==timeReference.getCN().getString())
@@ -259,21 +259,20 @@ def main():
         <variable type="dependent" name="C_cyt"/>
         <variable type="dependent" name="RanC_cyt"/>
         '''
+        from data import ReferenceVariable, ParameterDescription
+        from COPASI import CModelValue, CCommonName_escape
         for refIndex in range(1,num_ref_variables):  # skip first columnn (time)
-            refVar = vcellReferenceVariableList[refIndex]
-            assert(isinstance(refVar,VCELLOPT.ReferenceVariable))
-            modelValue = getModelValue(model,str(refVar.varName))
-            assert(isinstance(modelValue,COPASI.CModelValue))
-            objectMap.setRole(refIndex, COPASI.CExperiment.dependent)
-            modelValueReference = modelValue.getObject(COPASI.CCopasiObjectName("Reference=Value"))
-            assert(isinstance(modelValueReference,COPASI.CCopasiObject))
-            print "modelValue CN is "+str(modelValue.getCN())+", modelValueReference CN is "+str(modelValueReference.getCN())
+            refVar: ReferenceVariable = vcellReferenceVariableList[refIndex]
+            modelValue: CModelValue = getModelValue(model,str(refVar.varName))
+            objectMap.setRole(refIndex, CExperiment.dependent)
+            modelValueReference: CDataObject = modelValue.getObject(CCommonName_escape("Reference=Value"))
+            assert(isinstance(modelValueReference,CDataObject))
+            print("modelValue CN is "+str(modelValue.getCN())+", modelValueReference CN is "+str(modelValueReference.getCN()))
             objectMap.setObjectCN(refIndex, modelValueReference.getCN().getString())
 
         experimentSet.addExperiment(experiment)         # addExperiment makes a copy
         assert experimentSet.getExperimentCount() == 1
-        experiment = experimentSet.getExperiment(0)     # need to get the correct instance
-        assert(isinstance(experiment,COPASI.CExperiment))
+        experiment: CExperiment = experimentSet.getExperiment(0)     # need to get the correct instance
 
         #---------------------------------------------------------------------------------------
         # define CFitItems
@@ -285,23 +284,22 @@ def main():
         </parameterDescription>
         '''
         assert(fitProblem.getOptItemSize()==0)
-        vcellParameterDescriptionList = vcellOptProblem.parameterDescriptionList
+        vcellParameterDescriptionList: List[ParameterDescription] = vcellOptProblem.parameterDescriptionList
         for vcellParam in vcellParameterDescriptionList:
-            assert(isinstance(vcellParam,VCELLOPT.ParameterDescription))
-            paramModelValue = getModelValue(model,str(vcellParam.name))
-            assert(isinstance(paramModelValue,COPASI.CModelValue))
-            paramModelValueRef = paramModelValue.getInitialValueReference()
-            assert(isinstance(paramModelValueRef,COPASI.CCopasiObject))
-            fitItem = COPASI.CFitItem(dataModel)
-            assert(isinstance(fitItem,COPASI.CFitItem))
+            assert(isinstance(vcellParam, ParameterDescription))
+            paramModelValue: CModelValue = getModelValue(model,str(vcellParam.name))
+            assert(isinstance(paramModelValue, CModelValue))
+            paramModelValueRef: CDataObject = paramModelValue.getInitialValueReference()
+            assert(isinstance(paramModelValueRef,CDataObject))
+            fitItem: CFitItem = CFitItem(dataModel)
             fitItem.setObjectCN(paramModelValueRef.getCN())
             fitItem.setStartValue(vcellParam.initialValue)
-            fitItem.setLowerBound(COPASI.CCopasiObjectName(str(vcellParam.minValue)))
-            fitItem.setUpperBound(COPASI.CCopasiObjectName(str(vcellParam.maxValue)))
+            fitItem.setLowerBound(CCommonName(str(vcellParam.minValue)))
+            fitItem.setUpperBound(CCommonName(str(vcellParam.maxValue)))
             # todo: what about scale?
             # add the fit item to the correct parameter group
-            optimizationItemGroup = fitProblem.getParameter("OptimizationItemList")
-            assert(isinstance(optimizationItemGroup,COPASI.CCopasiParameterGroup))
+            optimizationItemGroup: CCopasiParameterGroup = fitProblem.getParameter("OptimizationItemList")
+            assert(isinstance(optimizationItemGroup,CCopasiParameterGroup))
             optimizationItemGroup.addParameter(fitItem)
             # addParameter makes a copy of the fit item, so we have to get it back
             #fitItem = optimizationItemGroup.getParameter(0)
@@ -328,9 +326,9 @@ def main():
             try:
                 print ("This can take some time...")
                 initialize = (i==0)
-                result = fitTask.processWithOutputFlags(initialize, COPASI.CCopasiTask.NO_OUTPUT)  # NO_OUTPUT
+                result = fitTask.processWithOutputFlags(initialize, CCopasiTask.NO_OUTPUT)  # NO_OUTPUT
             except:
-                print "Unexpected error:", sys.exc_info()[0]
+                print("Unexpected error:", sys.exc_info()[0])
                 return 1
 
             if result == False:
@@ -339,13 +337,13 @@ def main():
                 sys.stderr.write("fitTask warning: '" + str(fitTask.getProcessWarning()) + "'")
                 sys.stderr.write("fitTask error: '" + str(fitTask.getProcessError()) + "'")
                 # check if there are additional error messages
-                if COPASI.CCopasiMessage.size() > 0:
+                if CCopasiMessage.size() > 0:
                     # print the messages in chronological order
-                    sys.stderr.write(COPASI.CCopasiMessage.getAllMessageText(True))
+                    sys.stderr.write(CCopasiMessage.getAllMessageText(True))
                 return 1
 
             currentFuncValue = fitProblem.getSolutionValue()
-            print "currFuncValue = " + str(currentFuncValue)
+            print("currFuncValue = " + str(currentFuncValue))
             if (currentFuncValue < leastError) or (i == 0):         # current run has the smallest error so far
                 bestObjectiveFunction = currentFuncValue
                 numObjFuncEvals = fitProblem.getFunctionEvaluations()
@@ -358,7 +356,7 @@ def main():
                     paramNames.append(paramName)
                     paramValue = fitProblem.getSolutionVariables().get(j)
                     paramValues.append(paramValue)
-                    print "param " + paramName + " --> " + str(paramValue)
+                    print("param " + paramName + " --> " + str(paramValue))
                 assert isinstance(currentFuncValue, float)
                 leastError = currentFuncValue
 
@@ -368,15 +366,15 @@ def main():
 
         #result = dataModel.saveModel('test_succeeded.cps', True)
         #assert(result==True)
-
-        optRun = VCELLOPT.OptRun()
+        from data import VcelloptStatus, OptResultSet
+        optRun = Vcellopt()
         optRun.optProblem = vcellOptProblem
         optRun.statusMessage = "complete"
-        optRun.status = VCELLOPT.OptRunStatus.Complete
-        optResultSet = VCELLOPT.OptResultSet()
+        optRun.status = VcelloptStatus.COMPLETE
+        optResultSet = OptResultSet()
         optResultSet.numFunctionEvaluations = numObjFuncEvals
         optResultSet.objectiveFunction = leastError
-        optResultSet.optParameterValues = []
+        optResultSet.opt_parameter_values = dict()
         paramValueDict = dict(zip(paramNames,paramValues))
         for paramName in paramNames:
             optParameterValue = VCELLOPT.OptParameterValue(paramName,paramValueDict[paramName])
@@ -436,50 +434,44 @@ def writeOptSolverResultSet(resultFile, leastError, numObjFuncEvals, paramNames,
     tree.write(resultFile)
     
 
-def getModelValue(model, objectName):
-    modelValues = model.getModelValues()
-    assert (isinstance(modelValues, COPASI.ModelValueVectorN))
+def getModelValue(model: CModel, objectName) -> CModelValue:
+    modelValues: ModelValueVectorN = model.getModelValues()
     return modelValues.getByName(objectName)
 
 
-def printModel(model):
+def printModel(model: CModel):
     #
     # print all of the model metabolites
     #
-    metabs = model.getMetabolites()
-    assert (isinstance(metabs, COPASI.MetabVector))
-    print "Metabolites size = " + str(metabs.size())
+    metabs: MetabVector = model.getMetabolites()
+    print("Metabolites size = " + str(metabs.size()))
     for index in range(0, metabs.size()):
         metab = metabs.get(index)
-        assert (isinstance(metab, COPASI.CMetab))
-        print "metabolite [{0}]: objectName = {1}, commonName = {2}, displayName = {3}".format(
-            str(index), str(metab.getObjectName()), str(metab.getCN()), str(metab.getObjectDisplayName()))
+        assert (isinstance(metab, CMetab))
+        print("metabolite [{0}]: objectName = {1}, commonName = {2}, displayName = {3}".format(
+            str(index), str(metab.getObjectName()), str(metab.getCN()), str(metab.getObjectDisplayName())))
 
     #
     # print all of the model values
     #
-    modelValues = model.getModelValues()
-    assert (isinstance(modelValues, COPASI.ModelValueVectorN))
-    print "ModelValues size = " + str(modelValues.size())
+    modelValues: ModelValueVectorN = model.getModelValues()
+    print("ModelValues size = " + str(modelValues.size()))
     for index in range(0, modelValues.size()):
-        modelValue = modelValues.get(index)
-        assert (isinstance(modelValue, COPASI.CModelValue))
-        print "modelValue [{0}]: objectName = {1}, commonName = {2}, displayName = {3}".format(
+        modelValue: CModelValue = modelValues.get(index)
+        print("modelValue [{0}]: objectName = {1}, commonName = {2}, displayName = {3}".format(
             str(index), str(modelValue.getObjectName()), str(modelValue.getCN()),
-            str(modelValue.getObjectDisplayName()))
+            str(modelValue.getObjectDisplayName())))
 
     #
     # print all of the model compartments
     #
-    compartments = model.getCompartments()
-    assert (isinstance(compartments, COPASI.CompartmentVectorNS))
-    print "Compartments size = " + str(compartments.size())
+    compartments: CompartmentVectorNS = model.getCompartments()
+    print("Compartments size = " + str(compartments.size()))
     for index in range(0, compartments.size()):
-        compartment = compartments.get(index)
-        assert (isinstance(compartment, COPASI.CCompartment))
-        print "compartment [{0}]: objectName = {1}, commonName = {2}, displayName = {3}".format(
+        compartment: CCompartment = compartments.get(index)
+        print("compartment [{0}]: objectName = {1}, commonName = {2}, displayName = {3}".format(
             str(index), str(compartment.getObjectName()), str(compartment.getCN()),
-            str(compartment.getObjectDisplayName()))
+            str(compartment.getObjectDisplayName())))
 
 
 if __name__ == '__main__':
