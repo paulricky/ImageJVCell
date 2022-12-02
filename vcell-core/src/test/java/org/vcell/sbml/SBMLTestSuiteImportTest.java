@@ -8,6 +8,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.vcell.sbml.vcell.SBMLImporter;
 
+import javax.wsdl.Fault;
 import javax.xml.stream.XMLStreamException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,12 +37,18 @@ public class SBMLTestSuiteImportTest {
 		faults.put(48, FAULT.COMPARTMENT_0D);
 		faults.put(49, FAULT.COMPARTMENT_0D);
 		faults.put(50, FAULT.COMPARTMENT_0D);
+		faults.put(51, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
+		faults.put(52, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
+		faults.put(53, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
 		faults.put(96, FAULT.COMPARTMENT_1D);
 		faults.put(97, FAULT.COMPARTMENT_0D);
 		faults.put(99, FAULT.COMPARTMENT_1D);
 		faults.put(100, FAULT.COMPARTMENT_0D);
 		faults.put(102, FAULT.COMPARTMENT_1D);
 		faults.put(103, FAULT.COMPARTMENT_0D);
+		faults.put(104, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
+		faults.put(105, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
+		faults.put(106, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
 		faults.put(153, FAULT.COMPARTMENT_1D);
 		faults.put(154, FAULT.COMPARTMENT_1D);
 		faults.put(155, FAULT.COMPARTMENT_0D);
@@ -197,12 +204,24 @@ public class SBMLTestSuiteImportTest {
 		faults.put(780, FAULT.ALGEBRAIC_RULES);
 		faults.put(844, FAULT.ALGEBRAIC_RULES);
 		faults.put(876, FAULT.ALGEBRAIC_RULES);
+		faults.put(901, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
+		faults.put(902, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
+		faults.put(903, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
+		faults.put(904, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
 		faults.put(905, FAULT.COMPARTMENT_1D);
+		faults.put(906, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
 		faults.put(907, FAULT.COMPARTMENT_1D);
+		faults.put(908, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
 		faults.put(909, FAULT.COMPARTMENT_1D);
 		faults.put(910, FAULT.COMPARTMENT_1D);
+		faults.put(911, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
+		faults.put(912, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
+		faults.put(913, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
+		faults.put(914, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
 		faults.put(915, FAULT.COMPARTMENT_1D);
+		faults.put(916, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
 		faults.put(917, FAULT.COMPARTMENT_1D);
+		faults.put(918, FAULT.MATHGEN_STRUCTURESIZE_VAR); // StructureSize Variable is not supported at this time
 		faults.put(919, FAULT.COMPARTMENT_1D);
 		faults.put(937, FAULT.DELAY);
 		faults.put(938, FAULT.DELAY);
@@ -340,7 +359,8 @@ public class SBMLTestSuiteImportTest {
 		INCONSISTENT_UNIT_SYSTEM,
 		EXPRESSION_BINDING_EXCEPTION,
 		XOR_MISSING,
-		JSBML_ERROR
+		JSBML_ERROR,
+		MATHGEN_STRUCTURESIZE_VAR
 	};
 
 
@@ -356,6 +376,7 @@ public class SBMLTestSuiteImportTest {
 		SBMLImporter importer = new SBMLImporter(testFileInputStream, vcl, bValidateSBML);
 		try {
 			BioModel bioModel = importer.getBioModel();
+			bioModel.updateAll(false);
 		}catch (Exception e){
 			System.err.println("unexpected exception in test case "+testCase);
 			throw e;

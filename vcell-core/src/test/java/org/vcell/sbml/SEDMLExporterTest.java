@@ -50,8 +50,11 @@ public class SEDMLExporterTest {
 		TOO_SLOW,
 		GEOMETRYSPEC_DIFFERENT,
 		NULL_POINTER_EXCEPTION,
+		DUPLICATE_METADATAID,
 		UNKNOWN_IDENTIFIER,
 		SBML_IMPORT_FAILURE,
+		SBML_DUPLICATE_ID,
+		SBML_STRUCTURE_MAPPING,
 		DIVIDE_BY_ZERO,
 	};
 
@@ -240,9 +243,9 @@ public class SEDMLExporterTest {
 //		Predicate<String> outOfMemoryFilter = (t) -> !outOfMemorySet().contains(t);
 //		Predicate<String> allTestsFilter = (t) -> true;
 //		Predicate<String> allFailures = (t) -> knownFaults().containsKey(t) && skipFilter.test(t);
-		Predicate<String> oneModelFilter = (t) -> t.equals("lumped_reaction_no_size_in_rate.vcml");
+		Predicate<String> oneModelFilter = (t) -> t.equals("biomodel_9171563.vcml");
 		Predicate<String> skipFilter = (t) -> !outOfMemorySet().contains(t) && !largeFileSet().contains(t);
-		return Arrays.stream(VcmlTestSuiteFiles.getVcmlTestCases()).filter(skipFilter).collect(Collectors.toList());
+		return Arrays.stream(VcmlTestSuiteFiles.getVcmlTestCases()).filter(oneModelFilter).collect(Collectors.toList());
 	}
 
 	@Test
