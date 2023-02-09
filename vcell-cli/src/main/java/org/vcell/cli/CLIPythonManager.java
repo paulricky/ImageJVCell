@@ -73,13 +73,13 @@ public class CLIPythonManager {
      * @throws IOException if there was a system IO failure
      */
 
-    public static void callNonSharedPython(String cliCommand, String sedmlPath, String resultOutDir) throws InterruptedException, IOException {
-        lg.warn("Using old style python invocation!");
-        Path cliWorkingDir = Paths.get(PropertyLoader.getRequiredProperty(PropertyLoader.cliWorkingDir));
-        ProcessBuilder pb = new ProcessBuilder("poetry", "run", "python", "-m", "vcell_cli_utils.cli",
-                cliCommand, sedmlPath, resultOutDir);
-        pb.directory(cliWorkingDir.toFile());
-        CLIPythonManager.runAndPrintProcessStreams(pb, "","");
+    @Deprecated
+    public static void callNonsharedPython(String cliCommand, String sedmlPath, String resultOutDir) throws InterruptedException, IOException {
+        logger.warn("Using old style python invocation!");
+        ProcessBuilder pb = new ProcessBuilder(new String[]{"poetry","run","python", "-m", "vcell_cli_utils.cli", cliCommand, sedmlPath, resultOutDir});
+        File cliWorkingDir = PropertyLoader.getRequiredDirectory(PropertyLoader.cliWorkingDir).getCanonicalFile();
+        pb.directory(cliWorkingDir);
+        runAndPrintProcessStreams(pb, "","");
     }
 
     /**
