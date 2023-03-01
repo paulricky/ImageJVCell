@@ -4,7 +4,7 @@ FROM eclipse-temurin:17 as jre-build
 #   java.beans.PropertyChangeEvent requires java.desktop
 #   org.apache.logging.log4j.core.util.DefaultShutdownCallbackRegistry requires java.management (MBeanRegistrationException)
 RUN $JAVA_HOME/bin/jlink \
-         --add-modules java.base,java.instrument,java.logging,java.management,java.desktop,java.naming,java.sql,java.xml,jdk.jdwp.agent \
+         --add-modules java.base,java.instrument,java.logging,java.management,java.desktop,java.naming,java.sql,java.xml,jdk.jdwp.agent,jdk.httpserver \
          --strip-debug \
          --no-man-pages \
          --no-header-files \
