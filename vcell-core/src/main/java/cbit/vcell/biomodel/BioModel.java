@@ -194,6 +194,15 @@ Identifiable, IdentifiableProvider, IssueSource, Displayable, VCellSbmlName
 		}
 	}
 
+	public final static class SetRandomVersionKeys implements Consumer<Versionable> {
+		@Override
+		public void accept(Versionable versionable) {
+			if (versionable.getVersion()!=null){
+				versionable.getVersion().testFixtureRandomizeKeys();
+			}
+		}
+	}
+
 	public void visitChildVersionables(Consumer<Versionable> operation) {
 		operation.accept(getModel());
 		for (SimulationContext sc : getSimulationContexts()){
@@ -212,6 +221,7 @@ Identifiable, IdentifiableProvider, IssueSource, Displayable, VCellSbmlName
 			operation.accept(sim);
 		}
 	}
+
 
 /**
  * The addPropertyChangeListener method was generated to support the propertyChange field.
