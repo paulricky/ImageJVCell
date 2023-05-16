@@ -37,6 +37,9 @@ public class ExecuteCommand implements Callable<Integer> {
     @Option(names = {"--exactMatchOnly"})
     private boolean bExactMatchOnly;
 
+    @Option(names = {"--stopOnFailure"})
+    private boolean bStopOnFailure;
+
     @Option(names = "--keepFlushingLogs")
     private boolean bKeepFlushingLogs;
 
@@ -104,7 +107,7 @@ public class ExecuteCommand implements Callable<Integer> {
             logger.info("Beginning execution");
             if (inputFilePath.isDirectory()) {
                 logger.debug("Batch mode requested");
-                ExecuteImpl.batchMode(inputFilePath, outputFilePath, cliLogger, bKeepTempFiles, bExactMatchOnly, bSmallMeshOverride);
+                ExecuteImpl.batchMode(inputFilePath, outputFilePath, cliLogger, bKeepTempFiles, bExactMatchOnly, bSmallMeshOverride, bStopOnFailure);
             } else {
                 logger.debug("Single mode requested");
                 File archiveToProcess = inputFilePath;
@@ -112,7 +115,7 @@ public class ExecuteCommand implements Callable<Integer> {
                 if (archiveToProcess.getName().endsWith("vcml")) {
                     ExecuteImpl.singleExecVcml(archiveToProcess, outputFilePath, cliLogger);
                 } else { // archiveToProcess.getName().endsWith("omex")
-                    ExecuteImpl.singleMode(archiveToProcess, outputFilePath, cliLogger, bKeepTempFiles, bExactMatchOnly, bEncapsulateOutput, bSmallMeshOverride);
+                    ExecuteImpl.singleMode(archiveToProcess, outputFilePath, cliLogger, bKeepTempFiles, bExactMatchOnly, bEncapsulateOutput, bSmallMeshOverride, bStopOnFailure);
                 }
             }
 

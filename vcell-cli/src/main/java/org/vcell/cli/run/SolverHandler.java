@@ -308,7 +308,8 @@ public class SolverHandler {
 
     public void simulateAllTasks(ExternalDocInfo externalDocInfo, SedML sedml, CLIRecordable cliLogger,
                                  File outputDirForSedml, String outDir, String outputBaseDir, String sedmlLocation,
-                                 boolean keepTempFiles, boolean exactMatchOnly, boolean bSmallMeshOverride) throws Exception {
+                                 boolean keepTempFiles, boolean exactMatchOnly, boolean bSmallMeshOverride,
+								 boolean bExceptionOnFailure) throws Exception {
         // create the VCDocument(s) (bioModel(s) + application(s) + simulation(s)), do sanity checks
         cbit.util.xml.VCLogger sedmlImportLogger = new LocalLogger();
         String inputFile = externalDocInfo.getFile().getAbsolutePath();
@@ -340,6 +341,9 @@ public class SolverHandler {
                 SolverHandler.sanityCheck(bioModel);
             } catch (Exception e) {
                 logger.error("Exception encountered: " + e.getMessage(), e);
+				if (bExceptionOnFailure){
+					throw e;
+				}
                 // continue;
             }
             docName = bioModel.getName();
@@ -489,7 +493,9 @@ public class SolverHandler {
                 } catch (Exception e) {
 					String error = "Failed execution: Model '" + docName + "' Task '" + sim.getDescription() + "'. ";
                     logger.error(error);
-                    
+                    if (bExceptionOnFailure){
+						throw e;
+					}
                     long endTime = System.currentTimeMillis();
 					long elapsedTime = endTime - startTimeTask;
 					int duration = (int)Math.ceil(elapsedTime /1000.0);
@@ -546,6 +552,9 @@ public class SolverHandler {
 						keepTempFiles = true;
 					} catch(Exception e) {
 						logger.error(e.getMessage(), e);
+						if (bExceptionOnFailure){
+							throw e;
+						}
 						spatialResults.put(new TaskJob(task.getId(), tempSimulationJob.getJobIndex()), null);
 					}
 				} else {

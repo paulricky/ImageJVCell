@@ -151,9 +151,12 @@ public class SpatialExecTest {
                 }
             };
             InputStream omexInputStream = SpatialArchiveFiles.getSpatialTestCase(this.testCaseFilename);
-            Path omexFile = Files.createTempFile("Spatial_OmexFile_", "omex");
+            Random rand = new Random();
+            Math.abs(rand.nextInt(1000000));
+            Path omexFile = new File("/tmp/Spatial_OmexFile_/"+Math.abs(rand.nextInt(1000000))+".omex").toPath();
+            //Path omexFile = Files.createTempFile("Spatial_OmexFile_", "omex");
             FileUtils.copyInputStreamToFile(omexInputStream, omexFile.toFile());
-            ExecuteImpl.singleMode(omexFile.toFile(), outdirPath.toFile(), cliRecorder);
+            ExecuteImpl.singleMode(omexFile.toFile(), outdirPath.toFile(), cliRecorder, true);
             String errMessage = (errorMessage[0] != null) ? errorMessage[0].replace("\n", " | ") : "";
             Assert.assertFalse("failure: '" + errMessage + "'", bFailed[0]);
             if (knownFault != null){

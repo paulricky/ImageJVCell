@@ -98,7 +98,8 @@ public class BiosimulationsCommand implements Callable<Integer> {
             logger.info("Beginning execution");
             try {
                 CLIPythonManager.getInstance().instantiatePythonProcess();
-                ExecuteImpl.singleMode(ARCHIVE, OUT_DIR, cliRecorder);
+                boolean bExceptionOnFailure = true;
+                ExecuteImpl.singleMode(ARCHIVE, OUT_DIR, cliRecorder, bExceptionOnFailure);
                 return 0; // Does this prevent finally?
             } finally {
                 try {

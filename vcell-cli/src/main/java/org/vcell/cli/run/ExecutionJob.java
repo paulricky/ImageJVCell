@@ -26,7 +26,7 @@ public class ExecutionJob {
     private final static Logger logger = LogManager.getLogger(ExecutionJob.class);
 
     private long startTime, endTime; 
-    private boolean bExactMatchOnly, bSmallMeshOverride, bKeepTempFiles;
+    private boolean bExactMatchOnly, bSmallMeshOverride, bKeepTempFiles, bExceptionOnFailure;
     private StringBuilder logOmexMessage;
     private String inputFilePath, bioModelBaseName, outputBaseDir, outputDir;
     private boolean anySedmlDocumentHasSucceeded = false;    // set to true if at least one sedml document run is successful
@@ -51,7 +51,8 @@ public class ExecutionJob {
      * @param bSmallMeshOverride whether to use small meshes or standard meshes.
      */
     public ExecutionJob(File inputFile, File rootOutputDir, CLIRecordable cliRecorder,
-            boolean bKeepTempFiles, boolean bExactMatchOnly, boolean bEncapsulateOutput, boolean bSmallMeshOverride){
+            boolean bKeepTempFiles, boolean bExactMatchOnly, boolean bEncapsulateOutput,
+                        boolean bSmallMeshOverride, boolean bExceptionOnFailure){
         this();
         this.inputFile = inputFile;
         this.cliRecorder = cliRecorder;
@@ -63,6 +64,7 @@ public class ExecutionJob {
         this.bKeepTempFiles = bKeepTempFiles;
         this.bExactMatchOnly = bExactMatchOnly;
         this.bSmallMeshOverride = bSmallMeshOverride;
+        this.bExceptionOnFailure = bExceptionOnFailure;
     }
 
     private ExecutionJob(){
@@ -135,7 +137,7 @@ public class ExecutionJob {
                     this.anySedmlDocumentHasFailed = true;
                 }
                 SedmlStatistics stats = job.getDocStatistics();
-                boolean hasSucceeded = job.simulateSedml(masterHdf5File);
+                boolean hasSucceeded = job.simulateSedml(masterHdf5File, bExceptionOnFailure);
                 this.anySedmlDocumentHasSucceeded |= hasSucceeded;
                 this.anySedmlDocumentHasFailed &= hasSucceeded;
                 if (hasSucceeded) logger.info("Processing of SedML succeeded.\n" + stats.toString());
