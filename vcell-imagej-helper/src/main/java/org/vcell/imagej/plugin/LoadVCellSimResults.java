@@ -16,7 +16,6 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Window;
@@ -30,7 +29,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
 import java.util.TreeSet;
 
 import javax.swing.BoxLayout;
@@ -39,7 +37,6 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JEditorPane;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -58,9 +55,7 @@ import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.table.DefaultTableModel;
 
 import org.scijava.command.ContextCommand;
-import org.scijava.display.Display;
 import org.scijava.display.DisplayService;
-import org.scijava.display.event.DisplayUpdatedEvent;
 import org.scijava.event.EventService;
 import org.scijava.module.Module;
 import org.scijava.module.ModuleItem;
@@ -68,8 +63,6 @@ import org.scijava.module.process.AbstractPreprocessorPlugin;
 import org.scijava.module.process.PreprocessorPlugin;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.plugin.PluginInfo;
-import org.scijava.run.RunService;
 import org.scijava.ui.DialogPrompt.MessageType;
 import org.scijava.ui.UIService;
 import org.scijava.widget.UIComponent;
@@ -82,36 +75,19 @@ import org.vcell.imagej.helper.VCellHelper.ModelType;
 import org.vcell.imagej.helper.VCellHelper.VCellModelSearchResults;
 
 import ij.IJ;
-import ij.ImagePlus;
-import ij.ImageStack;
 import ij.WindowManager;
-import ij.gui.NewImage;
 import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
 import net.imagej.axis.Axes;
-import net.imagej.axis.AxisType;
-import net.imagej.axis.CalibratedAxis;
-import net.imagej.axis.DefaultAxisType;
 import net.imagej.axis.DefaultLinearAxis;
 import net.imagej.display.DefaultDatasetView;
 import net.imagej.display.DefaultImageDisplay;
-import net.imagej.display.ImageDisplay;
-import net.imagej.display.ImageDisplayService;
-import net.imagej.display.WindowService;
 import net.imagej.display.ZoomService;
-import net.imagej.display.event.PanZoomEvent;
-import net.imagej.ops.Op;
-import net.imagej.ops.OpService;
-import net.imagej.ops.Ops.Map;
 import net.imglib2.img.array.ArrayImg;
 import net.imglib2.img.array.ArrayImgs;
 import net.imglib2.img.basictypeaccess.array.DoubleArray;
 import net.imglib2.type.numeric.real.DoubleType;
-import net.imglib2.util.Pair;
-import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -119,12 +95,6 @@ import java.net.URL;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import javax.swing.JOptionPane;
 
 /**
  * This example illustrates how to create an ImageJ {@link ContextCommand}
@@ -160,8 +130,8 @@ public class LoadVCellSimResults extends ContextCommand {
 
 	private static Frame mainApplicationFrame;
 
-	public static void help(String type, JPanel panel, String helpText, GridBagConstraints constraints) {
-		final JButton button = new JButton("?");
+	public static void helpButton(String type, JPanel panel, String helpText, GridBagConstraints constraints) {
+		final JButton button = new JButton("Help");
 		panel.add(button, constraints);
 		/*
 		 * Font font = panel.getFont(); StringBuffer style = new
@@ -184,7 +154,7 @@ public class LoadVCellSimResults extends ContextCommand {
 		pane.setEditorKit(JEditorPane.createEditorKitForContentType("text/html"));
 		pane.setText("In order to run plugin:\n" + "\n" + "<ul>\n" + "<li> VCell ("
 				+ "<a href=\"https://vcell.org/\">http://vcell.org</a>" + ") should be started\n" + "\n"
-				+ "<li> you should be logged in under your username to load your models or unedr VCguest to load all public models.\n"
+				+ "<li> you should be logged in under your username to load your models or under VCguest to load all public models.\n"
 				+ "\n" + "<li> VCell ImageJ service should be started, under Tools -> Start Fiji...\n" + "\n"
 				+ "</ul>");
 		pane.setEditable(false);
@@ -770,8 +740,7 @@ public class LoadVCellSimResults extends ContextCommand {
 														.contains("Membrane_Region")))) {
 											dataVars[i][0] = ijVarInfosHolder[0].getIjVarInfo().get(i).getName();
 											dataVars[i][1] = ijVarInfosHolder[0].getIjVarInfo().get(i).getDomain();
-											dataVars[i][2] = ijVarInfosHolder[0].getIjVarInfo().get(i)
-													.getVariableType();
+											dataVars[i][2] = ijVarInfosHolder[0].getIjVarInfo().get(i).getVariableType();
 											counter1--;
 										} // else {
 											// i = i-counter1;
@@ -852,9 +821,12 @@ public class LoadVCellSimResults extends ContextCommand {
 									selectJPanel.add(maxTimeJSlider1);
 									// jp.setSize(325, 450);
 									int response = JOptionPane.showConfirmDialog(jp, selectJPanel,	"Select Vars and Times", JOptionPane.OK_CANCEL_OPTION);
-									if (response != JOptionPane.OK_OPTION) {
+									if ((response != JOptionPane.OK_OPTION)) {
 										return;
 									}
+								/*	if (!(response != JOptionPane.OK_OPTION) && !(ijVarInfosHolder[0].getIjVarInfo() == null) ) {
+										uiService.showDialog("Please select a variable", MessageType.ERROR_MESSAGE);
+									} */
 									ArrayList<Container> compList = new ArrayList<Container>();
 									compList.add(SwingUtilities.getAncestorOfClass(Window.class,
 											selectMultipleVarsAndTimesBtn));
@@ -864,6 +836,7 @@ public class LoadVCellSimResults extends ContextCommand {
 											Component comp = container.getComponent(i);
 											if (comp instanceof JButton && ((JButton) comp).getText().equals("OK")) {
 												((JButton) comp).doClick();
+												uiService.showDialog("Please select a variable");
 												return;
 											} else if (comp instanceof Container) {
 												compList.add((Container) comp);
@@ -883,7 +856,7 @@ public class LoadVCellSimResults extends ContextCommand {
 
 			c.gridy = 7;
 			c.gridx = -1;
-			help("", jp, "help text", c);
+			helpButton("", jp, "help text", c);
 
 			jcbModelType.setSelectedIndex(0);
 
@@ -915,6 +888,10 @@ public class LoadVCellSimResults extends ContextCommand {
 																								// exception
 				module.resolveInput(vcellModelsInput.getName());
 				return;
+			}
+			
+			if (!(response != JOptionPane.OK_OPTION) && !(ijVarInfosHolder[0].getIjVarInfo() == null) ) {
+				uiService.showDialog("Please select a variable", MessageType.ERROR_MESSAGE);
 			}
 
 			ModelType modelType = ModelType.valueOf((String) jcbModelType.getSelectedItem());

@@ -1,47 +1,20 @@
 package org.vcell.imagej.plugin;
 
-import java.awt.BorderLayout;
-import java.awt.Desktop;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Image;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
-import javax.swing.JDialog;
-import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.event.HyperlinkEvent;
-import javax.swing.event.HyperlinkListener;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.data.Range;
-import org.jfree.data.xy.DefaultXYDataset;
 import org.scijava.command.ContextCommand;
 import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
-import org.scijava.ui.DialogPrompt.MessageType;
 import org.scijava.ui.UIService;
 import org.vcell.imagej.helper.VCellHelper;
-import org.vcell.imagej.helper.VCellHelper.IJDataList;
-import org.vcell.imagej.helper.VCellHelper.IJTimeSeriesJobResults;
-import org.vcell.imagej.helper.VCellHelper.IJVarInfos;
-import org.vcell.imagej.helper.VCellHelper.VARTYPE_POSTPROC;
-import org.vcell.imagej.helper.VCellHelper.VCellModelSearchResults;
-
 import net.imagej.ImageJ;
 
 @Plugin(type = ContextCommand.class, menuPath = "Plugins>VCell>Help")
@@ -52,7 +25,7 @@ public class Help extends ContextCommand {
 
 	@Parameter
 	private VCellHelper vcellHelper;
-	static JOptionPane e = new JOptionPane();
+	//static JOptionPane pannel = new JOptionPane();
 
 	JFrame ui = new JFrame();
 
