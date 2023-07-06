@@ -12,7 +12,7 @@ import org.scijava.ui.UIService;
 import org.vcell.imagej.helper.VCellHelper;
 import net.imagej.ImageJ;
 
-@Plugin(type = ContextCommand.class, menuPath = "Plugins>VCell> Web Model Search")
+@Plugin(type = ContextCommand.class, menuPath = "Plugins>VCell> Full HTML Import")
 public class OnlineModelSearch extends ContextCommand {
 	@Parameter
 	private UIService uiService;

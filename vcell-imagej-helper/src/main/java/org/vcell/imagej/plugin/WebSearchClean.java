@@ -35,8 +35,9 @@ import ij.gui.GenericDialog;
 import net.imagej.ImageJ;
 
 
-@Plugin(type = ContextCommand.class, menuPath = "Plugins>VCell> Web Search")
-public class WebSearch extends ContextCommand {
+@SuppressWarnings("unused")
+@Plugin(type = ContextCommand.class, menuPath = "Plugins>VCell>Clean Test Search")
+public class WebSearchClean extends ContextCommand {
     @Parameter
     private UIService uiService;
 
@@ -49,24 +50,6 @@ public class WebSearch extends ContextCommand {
         ij.ui().showUI();
     }
     
-
-   /* public static void removeLineBreaks(Elements elements) {
-        for (Element element : elements) {
-            for (int i = 0; i < element.childNodeSize(); i++) {
-                org.jsoup.nodes.Node childNode = element.childNode(i);
-
-                if (childNode instanceof TextNode) {
-                    TextNode textNode = (TextNode) childNode;
-                    String text = textNode.text();
-                    text = text.replace("\n", "").replace("\r", "");
-                    textNode.text(text);
-                }
-            }
-            
-            removeLineBreaks(element.children());
-        }
-    } */
-    
     
     public void loadWebsite(String url, JEditorPane editorPane) {
         try {
@@ -76,51 +59,6 @@ public class WebSearch extends ContextCommand {
         }
     }
     
-
-   /* public class WebsiteDisplayFrame extends JFrame {
-        public WebsiteDisplayFrame(String url) {
-            setTitle("Model Search");
-            setSize(1000, 800);
-
-            JEditorPane editorPane = new JEditorPane();
-            editorPane.setEditable(false);
-            JScrollPane scrollPane = new JScrollPane(editorPane);
-            add(scrollPane);
-
-            loadWebsite(url, editorPane);
-        }
-    } */
-    
-    
-   /* private static String[] extractColumns(Elements tbodyElements) {
-        Element tbodyElement = tbodyElements.first();
-        Element grandparentElement = tbodyElement.parent().parent();
-        Elements headerCells = grandparentElement.select("thead th");
-
-        String[] columnNames = new String[headerCells.size()];
-        for (int i = 0; i < headerCells.size(); i++) {
-            columnNames[i] = headerCells.get(i).text();
-        }
-
-        return columnNames;
-    }
-    
-    
-    private static String[][] extractTableData(Elements tbodyElements) {
-        Elements rows = tbodyElements.select("tr");
-        String[][] data = new String[rows.size()][];
-
-        for (int i = 0; i < rows.size(); i++) {
-            Elements cells = rows.get(i).select("td");
-            data[i] = new String[cells.size()];
-
-            for (int j = 0; j < cells.size(); j++) {
-                data[i][j] = cells.get(j).text();
-            }
-        }
-
-        return data;
-    } */
     
     private static String[] extractFormat(Element table) {        
     	Elements headerCells = table.select("th");
@@ -145,14 +83,13 @@ public class WebSearch extends ContextCommand {
     }
     
     
-    private class JTextAreaCellRenderer extends JTextArea implements TableCellRenderer {
+    @SuppressWarnings("serial")
+	private class JTextAreaCellRenderer extends JTextArea implements TableCellRenderer {
         public JTextAreaCellRenderer() {
             setLineWrap(true);
             setWrapStyleWord(true);
             setOpaque(true);
-            setBorder(BorderFactory.createEmptyBorder()); // Remove the default padding
-
-            // Set the line spacing to match the font height
+            setBorder(BorderFactory.createEmptyBorder()); 
             FontMetrics fm = getFontMetrics(getFont());
             int lineHeight = fm.getHeight();
             int ascent = fm.getAscent();
@@ -177,24 +114,46 @@ public class WebSearch extends ContextCommand {
         }
 
         private void setLineHeight(int lineHeight) {
-            // Set the line spacing using HTML tags
             String html = "<html><body style='line-height:" + lineHeight + "px;'>%s</body></html>";
             setText(String.format(html, getText()));
         }
     }
-    private void adjustRowHeight(JTable table) {
+    
+    private static void adjustRowHeight(JTable table) {
         for (int row = 0; row < table.getRowCount(); row++) {
             int rowHeight = table.getRowHeight();
-
             for (int column = 0; column < table.getColumnCount(); column++) {
                 TableCellRenderer renderer = table.getCellRenderer(row, column);
                 Component comp = table.prepareRenderer(renderer, row, column);
                 rowHeight = Math.max(rowHeight, comp.getPreferredSize().height);
             }
-
             table.setRowHeight(row, rowHeight);
         }
     }
+    
+    
+    @SuppressWarnings("serial")
+	private static class QuotationCellRenderer extends JScrollPane implements TableCellRenderer {
+        private JTextArea textArea;
+
+        public QuotationCellRenderer() {
+            textArea = new JTextArea();
+            textArea.setLineWrap(true);
+            textArea.setWrapStyleWord(true);
+            textArea.setEditable(false);
+            setViewportView(textArea);
+            setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+            setPreferredSize(new Dimension(300, 50));
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
+                boolean hasFocus, int row, int column) {
+            textArea.setText(value != null ? value.toString() : "");
+            return this;
+        }
+    }
+
 
 
     public void run() {
@@ -232,10 +191,7 @@ public class WebSearch extends ContextCommand {
             String beginDate = box.getNextString();
             String endDate = box.getNextString();
             
-            
-           // WebsiteDisplayFrame frame = new WebsiteDisplayFrame(url);
-           // System.out.println(modelOwner);    
-            
+           
             
             JFrame frame = new JFrame("Search Results");
             
@@ -259,9 +215,9 @@ public class WebSearch extends ContextCommand {
 	             DefaultTableModel finalFormat = new DefaultTableModel(tableData, columns);
 
                  JTable table = new JTable(finalFormat);
-                 table.setDefaultRenderer(Object.class, new JTextAreaCellRenderer());
+                 table.setDefaultRenderer(Object.class, new QuotationCellRenderer());
                  adjustRowHeight(table);
-                 
+                // table.setDefaultEditor(Object.class, null);
 	             
 	             //StringBuilder builder = new StringBuilder();
 	             
@@ -275,17 +231,13 @@ public class WebSearch extends ContextCommand {
 	            				 
 	            				 if (num % 2 != 0 && num > 1) {
 	            					 tableData[i][x] = tableData[i][x].substring(0, z) + "\n" + tableData[i][x].substring(z);
-	            					 tableData[i][x].trim();
 	            				 }
 	            				// System.out.println(tableData[i][x]);
-	            				 }} }}
-	            /* for (String e: tableData[1]) {
-	            	 System.out.println(e);
-	             } */
-	             
-	             
+	            				 }
+	            			 }
+	            		 }
+	            	 }
 	            
-	             //table.setDefaultEditor(Object.class, null);
 	            
 	             JScrollPane panel = new JScrollPane(table);
 	             
@@ -296,33 +248,7 @@ public class WebSearch extends ContextCommand {
 	             frame.pack();
 	             
 	             frame.setVisible(true);
-	             
-				 //System.out.println(element);
-				 
-				/* for (Element tdElements : element) {
-					 removeLineBreaks(element);
-				 } 
-				 
-				 
-				 for (Element tdElements : element) {
-					 tdElements.append("<br>");
-					 element.equals(tdElements);
-				 } */
-				 
-				// System.out.println(elements.html());
-				// for (Element individualElements : elements) {
-		           //     String text = individualElements.text();
-		               // System.out.println(element1.getElementsByTag("<td>"));
-		           //     JLabel pane = new JLabel(text);
-		                /* JPanel gridPanel = new JPanel(new GridBagLayout());
-		                gridPanel.setPreferredSize(new Dimension(1000, 1000));
-		    			GridBagConstraints c = new GridBagConstraints(); */
-		    			//JEditorPane pane = new JEditorPane(text);
-		    			//pane.setContentType("text/html");
-		              /*  JScrollPane panel = new JScrollPane(pane);
-		                panel.setVisible(true);
-		                frame.add(panel); */
-		         //   }
+	          
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
