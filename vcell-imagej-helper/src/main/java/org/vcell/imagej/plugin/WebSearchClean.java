@@ -217,9 +217,7 @@ public class WebSearchClean extends ContextCommand {
                  JTable table = new JTable(finalFormat);
                  table.setDefaultRenderer(Object.class, new QuotationCellRenderer());
                  adjustRowHeight(table);
-                // table.setDefaultEditor(Object.class, null);
-	             
-	             //StringBuilder builder = new StringBuilder();
+                 table.setDefaultEditor(Object.class, null);
 	             
 	             int num = 0;
 	             for (int i = 0; i < tableData.length; i++) {
