@@ -10,13 +10,15 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.io.IOException;
 import java.net.URL;
 
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JPanel;
+import javax.swing.JPanel; 
 import javax.swing.JScrollPane;
 import org.scijava.command.ContextCommand;
 import org.scijava.plugin.Parameter;
@@ -26,6 +28,7 @@ import org.scijava.ui.UIService;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.table.TableColumn;
 import javax.swing.*;
 import java.awt.*;
 
@@ -36,7 +39,7 @@ import net.imagej.ImageJ;
 
 
 @SuppressWarnings("unused")
-@Plugin(type = ContextCommand.class, menuPath = "Plugins>VCell>Clean Test Search")
+@Plugin(type = ContextCommand.class, menuPath = "Plugins>VCell>")
 public class WebSearchClean extends ContextCommand {
     @Parameter
     private UIService uiService;
@@ -90,11 +93,11 @@ public class WebSearchClean extends ContextCommand {
             setWrapStyleWord(true);
             setOpaque(true);
             setBorder(BorderFactory.createEmptyBorder()); 
-            FontMetrics fm = getFontMetrics(getFont());
-            int lineHeight = fm.getHeight();
-            int ascent = fm.getAscent();
-            int descent = fm.getDescent();
-            int leading = fm.getLeading();
+            FontMetrics dimensions = getFontMetrics(getFont());
+            int lineHeight = dimensions.getHeight();
+            int ascent = dimensions.getAscent();
+            int descent = dimensions.getDescent();
+            int leading = dimensions.getLeading();
             int adjustedLineHeight = lineHeight - leading + descent;
             setLineHeight(adjustedLineHeight);
         }
@@ -133,7 +136,7 @@ public class WebSearchClean extends ContextCommand {
     
     
     @SuppressWarnings("serial")
-	private static class QuotationCellRenderer extends JScrollPane implements TableCellRenderer {
+	public static class QuotationCellRenderer extends JScrollPane implements TableCellRenderer {
         private JTextArea textArea;
 
         public QuotationCellRenderer() {
@@ -142,15 +145,80 @@ public class WebSearchClean extends ContextCommand {
             textArea.setWrapStyleWord(true);
             textArea.setEditable(false);
             setViewportView(textArea);
-            setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
             setPreferredSize(new Dimension(300, 50));
+            setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+            setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         }
 
         @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
-                boolean hasFocus, int row, int column) {
+        public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
             textArea.setText(value != null ? value.toString() : "");
+            adjustTextAreaWidth(table, column);
+            adjustTextAreaHeight(table, row, column);
             return this;
+        }
+
+        private void adjustTextAreaWidth(JTable table, int column) {
+            TableColumn tableColumn = table.getColumnModel().getColumn(column);
+            textArea.setSize(tableColumn.getWidth(), textArea.getPreferredSize().height);
+        }
+
+        private void adjustTextAreaHeight(JTable table, int row, int column) {
+            int rowHeight = table.getRowHeight(row);
+            int columnWidth = table.getColumnModel().getColumn(column).getWidth();
+
+            if (textArea.getPreferredSize().height > rowHeight) {
+                rowHeight = textArea.getPreferredSize().height;
+                table.setRowHeight(row, rowHeight);
+            }
+
+            if (textArea.getPreferredSize().width > columnWidth) {
+                columnWidth = textArea.getPreferredSize().width;
+                table.getColumnModel().getColumn(column).setWidth(columnWidth);
+            }
+        }
+    }
+
+
+    @SuppressWarnings("serial")
+	public static class QuotationCellEditor extends DefaultCellEditor {
+        private JTextArea textArea;
+
+        public QuotationCellEditor() {
+            super(new JTextField());
+            textArea = new JTextArea();
+            textArea.setLineWrap(true);
+            textArea.setWrapStyleWord(true);
+            textArea.setBorder(BorderFactory.createEmptyBorder());
+            textArea.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_TAB) {
+                        e.consume();
+                    }
+                }
+            });
+            setClickCountToStart(0);
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
+            textArea.setText(value != null ? value.toString() : "");
+            adjustTextAreaWidth(table, column);
+            return new JScrollPane(textArea);
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return textArea.getText();
+        }
+
+        private void adjustTextAreaWidth(JTable table, int column) {
+            int tableWidth = table.getColumnModel().getColumn(column).getWidth();
+            int textWidth = textArea.getPreferredSize().width;
+            if (textWidth < tableWidth) {
+                textArea.setSize(tableWidth, textArea.getPreferredSize().height);
+            }
         }
     }
 
@@ -212,13 +280,10 @@ public class WebSearchClean extends ContextCommand {
 				 
 	             String[] columns = extractFormat(doc);
 	             
-	             DefaultTableModel finalFormat = new DefaultTableModel(tableData, columns);
+	            
 
-                 JTable table = new JTable(finalFormat);
-                 table.setDefaultRenderer(Object.class, new QuotationCellRenderer());
-                 adjustRowHeight(table);
-                 table.setDefaultEditor(Object.class, null);
-	             
+                
+                 
 	             int num = 0;
 	             for (int i = 0; i < tableData.length; i++) {
 	            	 for (int x = 0; x < tableData[i].length; x++) {
@@ -228,17 +293,22 @@ public class WebSearchClean extends ContextCommand {
 	            				 num++;
 	            				 
 	            				 if (num % 2 != 0 && num > 1) {
-	            					 tableData[i][x] = tableData[i][x].substring(0, z) + "\n" + tableData[i][x].substring(z);
+	            					 tableData[i][x] = tableData[i][x].substring(0, z) + "" + tableData[i][x].substring(z);
 	            				 }
 	            				// System.out.println(tableData[i][x]);
 	            				 }
 	            			 }
 	            		 }
 	            	 }
-	            
+	              DefaultTableModel finalFormat = new DefaultTableModel(tableData, columns);
+	             JTable table = new JTable(finalFormat);
+                 table.setDefaultRenderer(Object.class, new QuotationCellRenderer());
+                 adjustRowHeight(table);
+                 table.setDefaultRenderer(Object.class, new QuotationCellRenderer());
+                 table.setDefaultEditor(Object.class, new QuotationCellEditor());
+	             table.setDefaultEditor(Object.class, null);
 	            
 	             JScrollPane panel = new JScrollPane(table);
-	             
 	             panel.setPreferredSize(new Dimension(2000, 1000));
 
 	             frame.add(panel);
